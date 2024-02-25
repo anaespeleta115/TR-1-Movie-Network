@@ -6,7 +6,7 @@ from itertools import combinations
 #from pyvis.network import Network
 #import plotly.graph_objects as go
 
-movielens_dir = '/Users/antarabhattacharyay/Downloads/movienetwork/'
+movielens_dir = '/Users/devynfleming/Downloads/movienetwork 2/'
 
 movie_file_name = movielens_dir + 'vertex-movies.csv'
 actor_file_name = movielens_dir + 'vertex-actor.csv'
@@ -105,6 +105,13 @@ def get_movies_for_anne():
     anne_movies = [data for data in edge_list if data[1] == 'a1813']
 
     return anne_movies
+
+def get_movies_for_julie():
+    edge_list = get_all_cast_edges()
+    julie_movies = [data for data in edge_list if data[1] == 'a5823']
+
+    return julie_movies
+
 def get_edges_for_movie_list(movie_list, edge_list):
     """Returns the sublist of movie-role edges for movies in the movie_list"""
     movie_id_set = set()
@@ -322,6 +329,42 @@ def create_meryl_list():
     export_list(meryl_edge_file_name, cumulative_edge_list, edge_header)
     export_list(meryl_nodes_file_name, list(my_cast_map.values()), person_header)
 
+def create_julie_list():
+    julie_nodes_file_name = movielens_dir + 'julie-node.csv'
+    julie_edge_file_name = movielens_dir + 'julie-edges.csv'
+    all_cast_edges = get_all_cast_edges()
+    movie_data = get_movies_for_julie()
+    my_cast_edges = get_edges_for_movie_list(movie_data, all_cast_edges)
+
+    movie_data = make_network_edges(my_cast_edges)
+
+    cumulative_edge_list = get_timestamp_edges(movie_data)
+
+    all_actor_map = get_actor_map()
+
+    my_cast_map = get_roles_for_edges(all_actor_map, cumulative_edge_list)
+
+    print('role num', len(my_cast_map))
+    print('edge num', len(cumulative_edge_list))
+
+    G = nx.Graph()
+    for actor_id, actor_data in my_cast_map.items():
+        G.add_node(actor_id, label=actor_data[1])
+
+    # Add edges
+    for edge in cumulative_edge_list:
+        G.add_edge(edge[0], edge[1])
+    gephi_file_name = 'julie_network.gexf'
+
+    # Write the Gephi file
+    nx.write_gexf(G, gephi_file_name)
+
+    print(f'Graph exported to {gephi_file_name}')
+    # Add nodes
+
+    export_list(julie_edge_file_name, cumulative_edge_list, edge_header)
+    export_list(julie_nodes_file_name, list(my_cast_map.values()), person_header)
+
 def create_anne_list():
     anne_nodes_file_name = movielens_dir + 'anne-node.csv'
     anne_edge_file_name = movielens_dir + 'anne-edges.csv'
@@ -363,6 +406,7 @@ def main():
 
     m = get_movies_for_meryl()
     n = get_movies_for_anne()
+    j = get_movies_for_julie()
     i = 0
     for movies in m :
         print(i)
@@ -373,6 +417,11 @@ def main():
         print(i)
         i = i+1
     create_anne_list()
+
+    for movies in j :
+        print(i)
+        i = i+1
+    create_julie_list()
 #     all_movies = get_all_movies()
 #     all_cast_edges = get_all_cast_edges()
 #     all_actor_map = get_actor_map()
